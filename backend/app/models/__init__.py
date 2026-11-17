@@ -18,6 +18,7 @@ from app.models.equipo import Equipo, EquipoImagen, EstadoEquipo
 from app.models.mantenimiento import EstadoMantenimiento, Mantenimiento, TipoMantenimiento
 from app.models.prestamo import EstadoPrestamo, Prestamo
 from app.models.sede import Sede
+from app.models.ubicacion import Ubicacion
 from app.models.usuario import Rol, Sesion, Usuario
 
 __all__ = [
@@ -42,5 +43,6 @@ __all__ = [
     "Sesion",
     "TipoDonante",
     "TipoMantenimiento",
+    "Ubicacion",
     "Usuario",
 ]

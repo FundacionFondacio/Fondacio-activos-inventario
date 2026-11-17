@@ -24,6 +24,7 @@ from app.routers import (
     prestamos,
     salud,
     sedes,
+    ubicaciones,
     usuarios,
 )
 from app.security import hashear_contrasena
@@ -84,6 +85,7 @@ def crear_app() -> FastAPI:
         auth,
         usuarios,
         sedes,
+        ubicaciones,
         donaciones,
         donantes,
         categorias,

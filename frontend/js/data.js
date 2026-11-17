@@ -76,6 +76,7 @@ class DataStoreAPI {
   constructor() {
     this.user = null;
     this.cachedSedes = [];
+    this.cachedUbicaciones = [];
   }
 
   getCurrentUser() {
@@ -188,6 +189,54 @@ class DataStoreAPI {
 
   async deleteSede(id) {
     await api(`/api/sedes/${id}`, { method: 'DELETE' });
+    return { success: true };
+  }
+
+  // --- UBICACIONES ---
+  async getUbicaciones(sede = null, activeOnly = null) {
+    const params = new URLSearchParams();
+    params.append('limit', '500');
+    if (sede && sede !== 'all') {
+      params.append('sede', sede);
+    }
+    if (activeOnly !== null) {
+      params.append('active', activeOnly ? 'true' : 'false');
+    }
+    const res = await api(`/api/ubicaciones?${params.toString()}`);
+    const items = res.items || [];
+    if (!sede && activeOnly === null) {
+      this.cachedUbicaciones = items;
+    }
+    return items;
+  }
+
+  async getUbicacionById(id) {
+    return await api(`/api/ubicaciones/${id}`);
+  }
+
+  async saveUbicacion(ubicacion) {
+    const payload = {
+      sede: ubicacion.sede,
+      name: ubicacion.name,
+      description: ubicacion.description || '',
+      active: ubicacion.active !== undefined ? Boolean(ubicacion.active) : true
+    };
+
+    if (ubicacion.id) {
+      return await api(`/api/ubicaciones/${ubicacion.id}`, {
+        method: 'PATCH',
+        body: payload
+      });
+    } else {
+      return await api('/api/ubicaciones', {
+        method: 'POST',
+        body: payload
+      });
+    }
+  }
+
+  async deleteUbicacion(id) {
+    await api(`/api/ubicaciones/${id}`, { method: 'DELETE' });
     return { success: true };
   }
 

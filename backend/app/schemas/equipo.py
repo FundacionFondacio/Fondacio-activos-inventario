@@ -90,6 +90,7 @@ class EquipoNuevo(_EquipoEntrada):
     area: Texto = ""
     assigned_to: Texto = ""
     assigned_role: Texto = ""
+    location_id: Texto | None = None
     location: Texto = ""
     condition: Texto = ""
     estimated_value: NumeroOpcional = None
@@ -109,6 +110,7 @@ class EquipoCambios(_EquipoEntrada):
     area: Texto = ""
     assigned_to: Texto = ""
     assigned_role: Texto = ""
+    location_id: Texto | None = None
     location: Texto = ""
     condition: Texto = ""
     estimated_value: NumeroOpcional = None
@@ -132,6 +134,7 @@ class EquipoResumen(Salida):
     area: str
     assigned_to: str = Field(validation_alias="responsable")
     assigned_role: str = Field(validation_alias="cargo_responsable")
+    location_id: str | None = Field(default=None, validation_alias="ubicacion_id")
     location: str = Field(validation_alias="ubicacion")
     condition: str = Field(validation_alias="condicion")
     estimated_value: float | None = Field(validation_alias="valor_estimado")

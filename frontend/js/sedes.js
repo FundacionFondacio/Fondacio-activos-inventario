@@ -11,10 +11,20 @@ function initSedesModule() {
     form.addEventListener('submit', handleSaveSedeForm);
   }
 
+  const formUbicacion = document.getElementById('form-ubicacion');
+  if (formUbicacion) {
+    formUbicacion.addEventListener('submit', handleSaveUbicacionForm);
+  }
+
+  const filterUbicacionSede = document.getElementById('filter-ubicacion-sede');
+  if (filterUbicacionSede) {
+    filterUbicacionSede.addEventListener('change', () => renderUbicacionesList());
+  }
+
   // Actualizar todos los dropdowns de sedes en la app
   updateAllSedeDropdowns();
 
-  // Listener en formulario de activos para auto-completar dirección al elegir sede
+  // Listener en formulario de activos para auto-completar dirección y ubicaciones al elegir sede
   const assetSedeSelect = document.getElementById('asset-sede');
   if (assetSedeSelect) {
     assetSedeSelect.addEventListener('change', async (e) => {
@@ -26,6 +36,7 @@ function initSedesModule() {
           addrField.value = `${sedeObj.address || ''}${sedeObj.city ? ', ' + sedeObj.city : ''}`;
         }
       }
+      await updateAssetLocationDropdown(selectedSedeName);
       suggestAssetCode();
     });
   }
@@ -64,7 +75,25 @@ async function updateAllSedeDropdowns() {
       if (currentVal) loanSede.value = currentVal;
     }
 
-    // 4. Sidebar Pills
+    // 4. Dropdowns de Ubicaciones (filtro y modal)
+    const filterUbicacionSede = document.getElementById('filter-ubicacion-sede');
+    if (filterUbicacionSede) {
+      const currentVal = filterUbicacionSede.value || 'all';
+      filterUbicacionSede.innerHTML = '<option value="all">🏢 Todas las Sedes</option>' +
+        sedes.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
+      filterUbicacionSede.value = currentVal;
+    }
+
+    const ubicacionSede = document.getElementById('ubicacion-sede');
+    if (ubicacionSede) {
+      const currentVal = ubicacionSede.value || (sedes[0] ? sedes[0].name : '');
+      ubicacionSede.innerHTML = sedes.map(s =>
+        `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)} - ${escapeHtml(s.city || '')}</option>`
+      ).join('');
+      if (currentVal) ubicacionSede.value = currentVal;
+    }
+
+    // 5. Sidebar Pills
     renderSidebarSedePills(sedes);
   } catch (err) {
     console.error('Error al actualizar dropdowns de sedes:', err);
@@ -156,6 +185,7 @@ async function renderSedesList() {
     }).join('');
 
     if (window.lucide) lucide.createIcons();
+    await renderUbicacionesList();
   } catch (err) {
     console.error('Error al renderizar sedes:', err);
     showToast('Error al cargar sedes: ' + err.message, 'error');
@@ -248,6 +278,183 @@ async function confirmDeleteSede(id) {
     await updateAllSedeDropdowns();
     await renderSedesList();
     await renderDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// --- GESTIÓN DE UBICACIONES POR SEDE ---
+async function updateAssetLocationDropdown(sedeName, selectedLocationId = null, selectedLocationText = '') {
+  const select = document.getElementById('asset-location');
+  if (!select) return;
+
+  let ubicaciones = [];
+  if (sedeName) {
+    try {
+      ubicaciones = await DB.getUbicaciones(sedeName, true);
+    } catch (err) {
+      console.error('Error al cargar ubicaciones de la sede:', err);
+    }
+  }
+
+  let optionsHtml = '<option value="">Sin ubicación específica</option>' +
+    ubicaciones.map(u =>
+      `<option value="${escapeHtml(u.name)}" data-location-id="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`
+    ).join('');
+
+  let matchedValue = '';
+  if (selectedLocationId) {
+    const byId = ubicaciones.find(u => u.id === selectedLocationId);
+    if (byId) matchedValue = byId.name;
+  }
+  if (!matchedValue && selectedLocationText) {
+    const byName = ubicaciones.find(u => u.name.toLowerCase() === selectedLocationText.toLowerCase());
+    if (byName) {
+      matchedValue = byName.name;
+    } else {
+      optionsHtml += `<option value="${escapeHtml(selectedLocationText)}" data-location-id="${escapeHtml(selectedLocationId || '')}">${escapeHtml(selectedLocationText)} (Actual)</option>`;
+      matchedValue = selectedLocationText;
+    }
+  }
+
+  select.innerHTML = optionsHtml;
+  select.value = matchedValue;
+}
+
+async function renderUbicacionesList() {
+  const container = document.getElementById('ubicaciones-cards-container');
+  if (!container) return;
+
+  const filterEl = document.getElementById('filter-ubicacion-sede');
+  const sedeFilter = filterEl ? filterEl.value : 'all';
+
+  try {
+    const ubicaciones = await DB.getUbicaciones(sedeFilter);
+    if (!ubicaciones.length) {
+      container.innerHTML = `
+        <div class="card-panel" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
+          <p style="margin: 0; font-size: 0.9rem;">No hay ubicaciones registradas${sedeFilter !== 'all' ? ` para la sede <strong>${escapeHtml(sedeFilter)}</strong>` : ''}.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = ubicaciones.map(u => `
+      <div class="card-panel" style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.65rem;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+            <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-main);">
+              <i data-lucide="map-pin" style="width: 15px; height: 15px; vertical-align: -2px; color: var(--primary-500);"></i>
+              ${escapeHtml(u.name)}
+            </h4>
+            <span class="badge ${u.active ? 'badge-success' : 'badge-secondary'}" style="font-size: 0.7rem;">
+              ${u.active ? 'Activa' : 'Inactiva'}
+            </span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--primary-600, #0284c7); font-weight: 600; margin-top: 0.25rem;">
+            Sede: ${escapeHtml(u.sede)}
+          </div>
+          ${u.description ? `<p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.5rem 0 0; line-height: 1.4;">${escapeHtml(u.description)}</p>` : ''}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.35rem; border-top: 1px solid var(--border-subtle); padding-top: 0.6rem;">
+          <button class="icon-button admin-only" data-admin-only onclick="openEditUbicacionModal('${u.id}')" title="Editar Ubicación">
+            <i data-lucide="edit-3"></i>
+          </button>
+          <button class="icon-button admin-only" data-admin-only onclick="confirmDeleteUbicacion('${u.id}')" title="Eliminar Ubicación" style="color: var(--accent-rose);">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error al renderizar ubicaciones:', err);
+    showToast('Error al cargar ubicaciones: ' + err.message, 'error');
+  }
+}
+
+async function openNewUbicacionModal(preselectedSede = null) {
+  await updateAllSedeDropdowns();
+  const form = document.getElementById('form-ubicacion');
+  if (form) form.reset();
+
+  document.getElementById('modal-ubicacion-title').textContent = 'Registrar Nueva Ubicación';
+  document.getElementById('ubicacion-id').value = '';
+  document.getElementById('ubicacion-active').checked = true;
+
+  const sedeSelect = document.getElementById('ubicacion-sede');
+  if (sedeSelect && preselectedSede) {
+    sedeSelect.value = preselectedSede;
+  } else if (sedeSelect) {
+    const filterEl = document.getElementById('filter-ubicacion-sede');
+    if (filterEl && filterEl.value && filterEl.value !== 'all') {
+      sedeSelect.value = filterEl.value;
+    }
+  }
+
+  openModal('modal-ubicacion-form');
+}
+
+async function openEditUbicacionModal(id) {
+  try {
+    await updateAllSedeDropdowns();
+    const u = await DB.getUbicacionById(id);
+    if (!u) return;
+
+    document.getElementById('modal-ubicacion-title').textContent = `Editar Ubicación: ${u.name}`;
+    document.getElementById('ubicacion-id').value = u.id;
+    document.getElementById('ubicacion-sede').value = u.sede || '';
+    document.getElementById('ubicacion-name').value = u.name || '';
+    document.getElementById('ubicacion-description').value = u.description || '';
+    document.getElementById('ubicacion-active').checked = u.active !== false;
+
+    openModal('modal-ubicacion-form');
+  } catch (err) {
+    showToast('Error al cargar datos de la ubicación: ' + err.message, 'error');
+  }
+}
+
+async function handleSaveUbicacionForm(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('ubicacion-id').value;
+  const ubicacionData = {
+    id: id || undefined,
+    sede: document.getElementById('ubicacion-sede').value,
+    name: document.getElementById('ubicacion-name').value.trim(),
+    description: document.getElementById('ubicacion-description').value.trim(),
+    active: document.getElementById('ubicacion-active').checked
+  };
+
+  if (!ubicacionData.sede || !ubicacionData.name) {
+    showToast('Selecciona la sede e ingresa el nombre de la ubicación.', 'error');
+    return;
+  }
+
+  try {
+    await DB.saveUbicacion(ubicacionData);
+    closeModal('modal-ubicacion-form');
+    showToast(id ? 'Ubicación actualizada exitosamente.' : 'Nueva ubicación registrada.', 'success');
+    await renderUbicacionesList();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function confirmDeleteUbicacion(id) {
+  try {
+    const u = await DB.getUbicacionById(id);
+    if (!u) return;
+
+    if (!confirm(`¿Deseas eliminar la ubicación "${u.name}" de la sede "${u.sede}"?`)) {
+      return;
+    }
+
+    await DB.deleteUbicacion(id);
+    showToast('Ubicación eliminada del sistema.', 'info');
+    await renderUbicacionesList();
   } catch (err) {
     showToast(err.message, 'error');
   }

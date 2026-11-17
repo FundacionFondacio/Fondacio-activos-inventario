@@ -405,6 +405,28 @@
           <div class="assets-cards-grid" id="sedes-cards-container">
             <!-- Inyectado dinámicamente por js/sedes.js -->
           </div>
+
+          <div class="toolbar-card" style="margin-top: 1.5rem;">
+            <div class="toolbar-row">
+              <div>
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">Ubicaciones y Espacios por Sede</h3>
+                <p style="font-size: 0.78rem; color: var(--text-secondary);">Registra salas, oficinas o bodegas dentro de cada sede para asignar dónde están ubicados los dispositivos.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <select id="filter-ubicacion-sede" class="form-control" style="width: auto; min-width: 180px;">
+                  <option value="all">🏢 Todas las Sedes</option>
+                </select>
+                <button class="btn btn-primary btn-sm admin-only" data-admin-only onclick="openNewUbicacionModal()">
+                  <i data-lucide="plus-circle"></i>
+                  <span>Registrar Nueva Ubicación</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="assets-cards-grid" id="ubicaciones-cards-container">
+            <!-- Inyectado dinámicamente por js/sedes.js -->
+          </div>
         </section>
 
         <!-- VISTA 3: ASIGNACIONES Y PRÉSTAMOS -->
@@ -959,6 +981,57 @@
     </div>
   </div>
 
+  <!-- MODAL: REGISTRAR / EDITAR UBICACIÓN DENTRO DE UNA SEDE -->
+  <div class="modal-overlay" id="modal-ubicacion-form">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="modal-ubicacion-title">Registrar Nueva Ubicación</h2>
+        <button class="modal-close-btn" onclick="closeModal('modal-ubicacion-form')">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <form id="form-ubicacion">
+        <input type="hidden" id="ubicacion-id" />
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label for="ubicacion-sede">Sede a la que pertenece *</label>
+              <select id="ubicacion-sede" class="form-control" required>
+                <!-- Inyectado dinámicamente -->
+              </select>
+            </div>
+
+            <div class="form-group col-span-2">
+              <label for="ubicacion-name">Nombre de la Ubicación / Espacio *</label>
+              <input type="text" id="ubicacion-name" class="form-control" placeholder="Ej: Sala de Sistemas 1, Oficina de Proyectos, Bodega 2" required />
+            </div>
+
+            <div class="form-group col-span-2">
+              <label for="ubicacion-description">Descripción o Referencia</label>
+              <textarea id="ubicacion-description" class="form-control" placeholder="Ej: Segundo piso, ala norte, capacidad para 20 equipos..."></textarea>
+            </div>
+
+            <div class="form-group col-span-2">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="ubicacion-active" checked />
+                <span>Ubicación activa (disponible para asignar dispositivos)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-ubicacion-form')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i>
+            <span>Guardar Ubicación</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: REGISTRAR / EDITAR HOJA DE VIDA DE EQUIPO DE CÓMPUTO -->
   <div class="modal-overlay" id="modal-asset-form">
     <div class="modal-dialog modal-xl">
@@ -1300,7 +1373,9 @@
 
             <div class="form-group">
               <label for="asset-location">Ubicación / Sala Específica</label>
-              <input type="text" id="asset-location" class="form-control" placeholder="Ej: Sala de Sistemas 1 / Oficina de Proyectos" />
+              <select id="asset-location" class="form-control">
+                <option value="">Sin ubicación específica</option>
+              </select>
             </div>
 
             <div class="form-group">

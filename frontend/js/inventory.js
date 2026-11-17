@@ -357,6 +357,9 @@ async function openNewAssetModal() {
     statusSelect.disabled = false;
   }
 
+  const sedeEl = document.getElementById('asset-sede');
+  await updateAssetLocationDropdown(sedeEl ? sedeEl.value : '');
+
   suggestAssetCode();
   
   // Establecer fecha de inventario de hoy
@@ -451,8 +454,9 @@ async function openEditAssetModal(id) {
     // Ubicación
     document.getElementById('asset-assigned-to').value = a.assignedTo || '';
     document.getElementById('asset-assigned-role').value = a.assignedRole || '';
-    document.getElementById('asset-sede').value = a.sede || 'Altos del Cabo';
-    document.getElementById('asset-location').value = a.location || '';
+    const sedeVal = a.sede || 'Altos del Cabo';
+    document.getElementById('asset-sede').value = sedeVal;
+    await updateAssetLocationDropdown(sedeVal, a.locationId, a.location || '');
     document.getElementById('asset-address').value = a.physicalAddress || '';
     document.getElementById('asset-assign-date').value = a.assignmentDate || '';
     
@@ -578,6 +582,11 @@ async function handleSaveAssetForm(e) {
     // Ubicación
     assignedTo: document.getElementById('asset-assigned-to').value.trim() || '',
     assignedRole: document.getElementById('asset-assigned-role').value.trim() || '',
+    locationId: (() => {
+      const sel = document.getElementById('asset-location');
+      const opt = sel && sel.selectedOptions ? sel.selectedOptions[0] : null;
+      return (opt && opt.dataset && opt.dataset.locationId) ? opt.dataset.locationId : null;
+    })(),
     location: document.getElementById('asset-location').value.trim() || '',
     physicalAddress: document.getElementById('asset-address').value.trim() || '',
     assignmentDate: document.getElementById('asset-assign-date').value || null,

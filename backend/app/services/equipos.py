@@ -11,6 +11,7 @@ from app.models import (
     ItemDonacion,
     Mantenimiento,
     Prestamo,
+    Ubicacion,
     Usuario,
 )
 from app.models.equipo import ESTADOS_DEL_SISTEMA
@@ -76,13 +77,42 @@ def _exigir_placa_libre(bd: Session, placa: str, salvo: Equipo | None = None) ->
         raise Conflicto(f"Ya existe un equipo con la placa {placa}")
 
 
+def _resolver_ubicacion(
+    bd: Session, sede_id: str, location_id: str | None, location: str
+) -> tuple[str | None, str]:
+    if location_id:
+        ubicacion = bd.get(Ubicacion, location_id)
+        if ubicacion is None:
+            raise DatoInvalido("locationId", "No existe esa ubicación")
+        if ubicacion.sede_id != sede_id:
+            raise DatoInvalido("locationId", "La ubicación no pertenece a la sede seleccionada")
+        return ubicacion.id, ubicacion.nombre
+    if location:
+        ubicacion = bd.scalar(
+            select(Ubicacion).where(
+                Ubicacion.sede_id == sede_id,
+                func.lower(Ubicacion.nombre) == location.lower(),
+            )
+        )
+        if ubicacion is not None:
+            return ubicacion.id, ubicacion.nombre
+    return None, location
+
+
 def crear_equipo(bd: Session, datos: EquipoNuevo, autor: Usuario | None) -> Equipo:
     if datos.status in ESTADOS_DEL_SISTEMA:
         raise Conflicto(ESTADO_AUTOMATICO)
     _exigir_placa_libre(bd, datos.code)
+    sede = resolver_sede(bd, datos.sede)
+    ubicacion_id, ubicacion_nombre = _resolver_ubicacion(
+        bd, sede.id, datos.location_id, datos.location
+    )
+    campos = valores(datos, COLUMNAS)
+    campos["ubicacion"] = ubicacion_nombre
     equipo = Equipo(
-        **valores(datos, COLUMNAS),
-        sede_id=resolver_sede(bd, datos.sede).id,
+        **campos,
+        sede_id=sede.id,
+        ubicacion_id=ubicacion_id,
         estado=datos.status,
         ficha_tecnica={k: v for k, v in datos.ficha().items() if v is not None},
     )
@@ -121,6 +151,19 @@ def actualizar_equipo(bd: Session, equipo: Equipo, datos: EquipoCambios, autor: 
     if sede.id != equipo.sede_id:
         cambios["sede"] = [equipo.sede.nombre, sede.nombre]
         equipo.sede = sede
+
+    if "location_id" in datos.model_fields_set or "location" in datos.model_fields_set or sede.id != equipo.sede_id:
+        loc_id_req = datos.location_id if "location_id" in datos.model_fields_set else (
+            None if sede.id != equipo.sede_id else equipo.ubicacion_id
+        )
+        loc_text_req = datos.location if "location" in datos.model_fields_set else equipo.ubicacion
+        if "location_id" in datos.model_fields_set and not datos.location_id and "location" not in datos.model_fields_set:
+            loc_text_req = ""
+        nuevo_loc_id, nuevo_loc_nombre = _resolver_ubicacion(bd, sede.id, loc_id_req, loc_text_req)
+        if nuevo_loc_nombre != equipo.ubicacion:
+            cambios["ubicacion"] = [equipo.ubicacion, nuevo_loc_nombre]
+            equipo.ubicacion = nuevo_loc_nombre
+        equipo.ubicacion_id = nuevo_loc_id
 
     ficha = dict(equipo.ficha_tecnica)
     for clave, valor in datos.ficha().items():

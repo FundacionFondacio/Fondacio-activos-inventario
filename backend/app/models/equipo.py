@@ -56,6 +56,9 @@ class Equipo(Trazable, Base):
     area: Mapped[str] = mapped_column(Text, server_default="")
     responsable: Mapped[str] = mapped_column(Text, server_default="")
     cargo_responsable: Mapped[str] = mapped_column(Text, server_default="")
+    ubicacion_id: Mapped[str | None] = mapped_column(
+        ForeignKey("ubicaciones.id", ondelete="SET NULL"), index=True
+    )
     ubicacion: Mapped[str] = mapped_column(Text, server_default="")
     condicion: Mapped[str] = mapped_column(Text, server_default="")
     valor_estimado: Mapped[float | None] = mapped_column(Numeric(14, 2, asdecimal=False))
