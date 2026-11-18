@@ -8,8 +8,8 @@ from tests.ayudas import nueva_sede, nuevo_equipo, nuevo_mantenimiento, nuevo_pr
 
 COLUMNAS = {
     "id", "code", "sede", "sedeId", "status", "category", "computerType", "brand", "model",
-    "serial", "area", "assignedTo", "assignedRole", "location", "condition", "estimatedValue",
-    "purchaseDate", "image", "createdAt", "updatedAt",
+    "serial", "area", "assignedTo", "assignedRole", "location", "locationId", "condition",
+    "estimatedValue", "purchaseDate", "image", "createdAt", "updatedAt",
 }  # fmt: skip
 
 
