@@ -69,9 +69,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_constraint(
-        op.f("fk_equipos_ubicacion_id_ubicaciones"), "equipos", type_="foreignkey"
-    )
+    op.drop_constraint(op.f("fk_equipos_ubicacion_id_ubicaciones"), "equipos", type_="foreignkey")
     op.drop_index(op.f("ix_equipos_ubicacion_id"), table_name="equipos")
     op.drop_column("equipos", "ubicacion_id")
     op.drop_index("uq_ubicaciones_sede_nombre_lower", table_name="ubicaciones")

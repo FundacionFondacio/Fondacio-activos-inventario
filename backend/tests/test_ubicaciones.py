@@ -82,9 +82,7 @@ def test_editar_ubicacion_sincroniza_equipos_vinculados(
     equipo_actualizado = cliente_admin.get(f"/api/equipos/{equipo['id']}").json()
     assert equipo_actualizado["location"] == "Oficina de Innovación"
 
-    auditoria = bd.scalars(
-        select(Auditoria).where(Auditoria.entidad == "ubicaciones")
-    ).all()
+    auditoria = bd.scalars(select(Auditoria).where(Auditoria.entidad == "ubicaciones")).all()
     assert {a.accion for a in auditoria} >= {"crear", "actualizar"}
 
 

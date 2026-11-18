@@ -20,9 +20,7 @@ class Ubicacion(Trazable, Base):
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=nuevo_id)
-    sede_id: Mapped[str] = mapped_column(
-        ForeignKey("sedes.id", ondelete="CASCADE"), index=True
-    )
+    sede_id: Mapped[str] = mapped_column(ForeignKey("sedes.id", ondelete="CASCADE"), index=True)
     nombre: Mapped[str] = mapped_column(Text)
     descripcion: Mapped[str] = mapped_column(Text, server_default="")
     activa: Mapped[bool] = mapped_column(default=True, server_default=true())
