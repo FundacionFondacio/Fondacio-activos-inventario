@@ -152,13 +152,23 @@ def actualizar_equipo(bd: Session, equipo: Equipo, datos: EquipoCambios, autor: 
         cambios["sede"] = [equipo.sede.nombre, sede.nombre]
         equipo.sede = sede
 
-    if "location_id" in datos.model_fields_set or "location" in datos.model_fields_set or sede.id != equipo.sede_id:
-        loc_id_req = datos.location_id if "location_id" in datos.model_fields_set else (
-            None if sede.id != equipo.sede_id else equipo.ubicacion_id
-        )
-        loc_text_req = datos.location if "location" in datos.model_fields_set else equipo.ubicacion
-        if "location_id" in datos.model_fields_set and not datos.location_id and "location" not in datos.model_fields_set:
+    campos_tocados = datos.model_fields_set
+    cambio_sede = sede.id != equipo.sede_id
+    if "location_id" in campos_tocados or "location" in campos_tocados or cambio_sede:
+        if "location_id" in campos_tocados:
+            loc_id_req = datos.location_id
+        elif cambio_sede:
+            loc_id_req = None
+        else:
+            loc_id_req = equipo.ubicacion_id
+
+        if "location" in campos_tocados:
+            loc_text_req = datos.location
+        elif "location_id" in campos_tocados and not datos.location_id:
             loc_text_req = ""
+        else:
+            loc_text_req = equipo.ubicacion
+
         nuevo_loc_id, nuevo_loc_nombre = _resolver_ubicacion(bd, sede.id, loc_id_req, loc_text_req)
         if nuevo_loc_nombre != equipo.ubicacion:
             cambios["ubicacion"] = [equipo.ubicacion, nuevo_loc_nombre]

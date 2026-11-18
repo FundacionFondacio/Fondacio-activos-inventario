@@ -69,7 +69,7 @@ def actualizar_ubicacion(
 
 
 def borrar_ubicacion(bd: Session, ubicacion: Ubicacion, autor: Usuario) -> None:
-    # Los equipos vinculados quedan con ubicacion_id = NULL (ON DELETE SET NULL), conservando el texto.
+    # Al borrar la ubicación, los equipos quedan con ubicacion_id = NULL y conservan su texto.
     registrar(
         bd,
         autor,
