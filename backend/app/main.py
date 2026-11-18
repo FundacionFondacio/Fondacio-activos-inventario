@@ -1,6 +1,10 @@
+import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -55,9 +59,13 @@ def _violacion_de_unicidad(_: Request, error: IntegrityError) -> JSONResponse:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Si la base no está en modo pruebas, asegura que exista el usuario admin inicial.
+    # Si la base no está en modo pruebas, asegura migraciones (en Vercel) y usuario admin inicial.
     if not os.environ.get("PYTEST_CURRENT_TEST"):
         try:
+            if os.environ.get("VERCEL"):
+                alembic_ini = Path(__file__).resolve().parents[1] / "alembic.ini"
+                if alembic_ini.exists():
+                    command.upgrade(Config(str(alembic_ini)), "head")
             motor = obtener_motor()
             with Session(motor) as bd:
                 admin_existente = bd.scalar(select(Usuario).where(Usuario.usuario == "admin"))
@@ -72,7 +80,7 @@ async def lifespan(app: FastAPI):
                     bd.add(admin_nuevo)
                     bd.commit()
         except Exception:
-            pass
+            logging.exception("Error inicializando base de datos o usuario admin")
     yield
 
 
