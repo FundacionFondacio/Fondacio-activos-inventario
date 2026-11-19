@@ -1180,10 +1180,20 @@ body {
   color: var(--text-main);
 }
 
+/* Los modales con <form> envuelven body y footer: el form debe propagar el flex
+   para que .modal-body quede acotado por max-height y pueda hacer scroll. */
+.modal-dialog > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .modal-body {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .modal-footer {
