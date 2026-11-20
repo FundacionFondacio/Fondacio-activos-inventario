@@ -1601,42 +1601,137 @@ textarea.form-control {
   :root {
     --sidebar-width: 0px;
   }
-  
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   .sidebar {
     transform: translateX(-100%);
     width: 260px;
+    z-index: 1200;
   }
-  
+
   .sidebar.mobile-open {
     transform: translateX(0);
+    box-shadow: 0 0 0 100vw rgba(0, 0, 0, 0.45);
   }
-  
+
   .mobile-toggle {
     display: flex;
   }
-  
+
   .main-wrapper {
     margin-left: 0;
+    width: 100%;
+    min-width: 0;
   }
-  
+
+  .topbar {
+    padding: 0.75rem 1rem;
+    height: auto;
+    min-height: 60px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .topbar-title h1 {
+    font-size: 1.05rem;
+  }
+
+  .topbar-title p {
+    font-size: 0.75rem;
+  }
+
   .search-bar-top {
     display: none;
   }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
+
+  .charts-grid,
+  .kpi-grid,
+  .assets-grid,
+  .sedes-grid,
+  .dashboard-bottom-grid,
+  .custom-fields-dynamic-container,
+  .form-builder-row {
+    grid-template-columns: 1fr !important;
   }
-  
+
+  .col-span-2,
+  .col-span-3,
+  .form-group.col-span-2,
+  .form-group.col-span-3,
+  .form-section-banner,
+  .form-subpanel {
+    grid-column: span 1 !important;
+  }
+
+  .form-grid,
   .form-grid-3 {
     grid-template-columns: 1fr;
   }
-  
-  .form-group.col-span-2, .form-group.col-span-3, .form-section-banner, .form-subpanel {
-    grid-column: span 1;
+
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
   }
-  
+
+  .filter-group {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .search-input-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .select-filter {
+    width: 100%;
+    min-width: 0;
+  }
+
   .content-body {
+    padding: 0.85rem;
+  }
+
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .modal-dialog,
+  .modal-dialog.modal-lg,
+  .modal-dialog.modal-xl {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 94vh;
+    margin: auto 0;
+  }
+
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 0.9rem 1rem;
+  }
+
+  .login-overlay {
     padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
