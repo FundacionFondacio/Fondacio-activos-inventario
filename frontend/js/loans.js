@@ -150,6 +150,9 @@ async function openNewLoanModal() {
     document.getElementById('loan-asset-info-preview').innerHTML = '';
 
     openModal('modal-loan-form');
+    if (typeof populateCustomFieldsInModal === 'function') {
+      populateCustomFieldsInModal('modal-loan-form', {});
+    }
   } catch (err) {
     showToast('Error al cargar equipos para préstamo: ' + err.message, 'error');
   }
@@ -181,7 +184,8 @@ async function handleSaveLoanForm(e) {
     purpose: document.getElementById('loan-purpose').value.trim(),
     loanDate: document.getElementById('loan-date').value || null,
     expectedReturnDate: document.getElementById('loan-expected-date').value || null,
-    conditionOnLoan: document.getElementById('loan-condition-note').value.trim() || 'Equipo en óptimas condiciones con sus accesorios.'
+    conditionOnLoan: document.getElementById('loan-condition-note').value.trim() || 'Equipo en óptimas condiciones con sus accesorios.',
+    customFields: typeof collectCustomFieldsFromModal === 'function' ? collectCustomFieldsFromModal('modal-loan-form') : {}
   };
 
   try {

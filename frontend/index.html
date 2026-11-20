@@ -82,6 +82,11 @@
           <span>Donaciones</span>
         </a>
 
+        <a class="nav-item" data-view="compras" id="nav-compras">
+          <i data-lucide="shopping-bag"></i>
+          <span>Compras</span>
+        </a>
+
         <div class="nav-section-title">Personalización & Sistema</div>
 
         <a class="nav-item" onclick="openCustomizerModal()">
@@ -562,36 +567,136 @@
 
             <div class="card-panel">
               <div class="card-panel-header">
-                <h3>ℹ️ Información Institucional</h3>
+                <h3>ℹ️ Información Institucional (Editable)</h3>
               </div>
-              <div class="asset-card-specs-list" style="margin: 0; padding: 1rem; font-size: 0.85rem;">
-                <div class="spec-line">
-                  <span>Organización:</span>
-                  <strong id="settings-org-name">Fundación Fondacio Colombia</strong>
+              <form id="form-institutional-settings">
+                <div class="form-grid" style="gap: 0.75rem;">
+                  <div class="form-group col-span-2">
+                    <label for="setting-org-name">Organización</label>
+                    <input type="text" id="setting-org-name" class="form-control" value="Fundación Fondacio Colombia" />
+                  </div>
+                  <div class="form-group">
+                    <label for="setting-nit">NIT</label>
+                    <input type="text" id="setting-nit" class="form-control" value="900.384.129-5" />
+                  </div>
+                  <div class="form-group">
+                    <label for="setting-email">Correo</label>
+                    <input type="email" id="setting-email" class="form-control" value="contacto@fondacio-co.org" />
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="setting-website">Sitio Web</label>
+                    <input type="text" id="setting-website" class="form-control" value="https://www.fondaciocolombia.org" />
+                  </div>
                 </div>
-                <div class="spec-line">
-                  <span>NIT:</span>
-                  <span id="settings-nit">900.384.129-5</span>
+                <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                  <button type="submit" class="btn btn-primary btn-sm admin-only" data-admin-only>
+                    <i data-lucide="save"></i>
+                    <span>Guardar Información</span>
+                  </button>
                 </div>
-                <div class="spec-line">
-                  <span>Correo:</span>
-                  <span id="settings-email">contacto@fondacio-co.org</span>
+              </form>
+            </div>
+
+            <!-- TARJETA: PERSONALIZACIÓN DE COLORES Y TEMA EN PÁGINA -->
+            <div class="card-panel col-span-2" style="margin-top: 1rem; border-top: 3px solid var(--accent-amber);">
+              <div class="card-panel-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                  <i data-lucide="palette" style="color: var(--primary-500);"></i>
+                  <span>Personalización Visual y Colores del Sistema</span>
+                </h3>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn btn-secondary btn-sm admin-only" data-admin-only onclick="resetThemeToDefaults()">Restablecer</button>
+                  <button type="button" class="btn btn-primary btn-sm admin-only" data-admin-only onclick="saveThemeConfigFromSettings()">
+                    <i data-lucide="check"></i>
+                    <span>Guardar Tema</span>
+                  </button>
                 </div>
-                <div class="spec-line">
-                  <span>Sitio Web:</span>
-                  <span id="settings-website">https://www.fondaciocolombia.org</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label for="inline-primary-color">Color Principal</label>
+                  <input type="color" id="inline-primary-color" class="form-control" style="height: 38px; padding: 3px;" />
                 </div>
-                <div class="spec-line">
-                  <span>Infraestructura:</span>
-                  <span style="color: var(--primary-600); font-weight: 700;">FastAPI • Base de Datos Central</span>
+                <div class="form-group">
+                  <label for="inline-dark-color">Principal Oscuro</label>
+                  <input type="color" id="inline-dark-color" class="form-control" style="height: 38px; padding: 3px;" />
+                </div>
+                <div class="form-group">
+                  <label for="inline-sidebar-color">Barra Lateral</label>
+                  <input type="color" id="inline-sidebar-color" class="form-control" style="height: 38px; padding: 3px;" />
+                </div>
+                <div class="form-group">
+                  <label for="inline-appbg-color">Fondo General</label>
+                  <input type="color" id="inline-appbg-color" class="form-control" style="height: 38px; padding: 3px;" />
+                </div>
+                <div class="form-group">
+                  <label for="inline-accent-color">Color Acento</label>
+                  <input type="color" id="inline-accent-color" class="form-control" style="height: 38px; padding: 3px;" />
+                </div>
+              </div>
+              <div id="inline-preset-swatches-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem;"></div>
+            </div>
+
+            <!-- TARJETA: EDITOR DE CAMPOS DE FORMULARIOS -->
+            <div class="card-panel col-span-2 admin-only" data-admin-only style="margin-top: 1rem; border-top: 3px solid #2563eb;">
+              <div class="card-panel-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                  <h3 style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <i data-lucide="sliders-horizontal" style="color: #2563eb;"></i>
+                    <span>Personalizador de Campos de Formularios</span>
+                  </h3>
+                  <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0.25rem 0 0;">
+                    Agrega, oculta, reordena o marca como obligatorios los campos de cualquier formulario del sistema.
+                  </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <select id="form-builder-select" class="select-filter" style="min-width: 220px;">
+                    <option value="equipos">Equipos / Computadores</option>
+                    <option value="donaciones">Donaciones</option>
+                    <option value="compras">Compras</option>
+                    <option value="prestamos">Préstamos</option>
+                    <option value="mantenimientos">Mantenimientos</option>
+                    <option value="sedes">Sedes</option>
+                  </select>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="resetCurrentFormBuilderSchema()">Restaurar Defecto</button>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="saveCurrentFormBuilderSchema()">
+                    <i data-lucide="save"></i>
+                    <span>Guardar Diseño</span>
+                  </button>
                 </div>
               </div>
 
-              <div style="margin-top: 1.25rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
-                <p>
-                  🌱 Sistema de gestión de activos de hardware para sedes Altos del Cabo, YLDC Potosí y Administrativa de la Fundación Fondacio Colombia.
-                </p>
-              </div>
+              <form id="form-builder-add-field" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end; padding: 0.75rem; border-radius: 8px; background: var(--bg-surface-elevated, #f8fafc); border: 1px dashed var(--border-subtle); margin-bottom: 1rem;">
+                <div class="form-group" style="flex: 1.5; min-width: 180px;">
+                  <label for="new-custom-field-label" style="font-size: 0.78rem;">Nuevo campo (Nombre)</label>
+                  <input type="text" id="new-custom-field-label" class="form-control" placeholder="Ej: N° de Factura, Garantía..." required />
+                </div>
+                <div class="form-group" style="min-width: 140px;">
+                  <label for="new-custom-field-type" style="font-size: 0.78rem;">Tipo de campo</label>
+                  <select id="new-custom-field-type" class="form-control">
+                    <option value="text">Texto corto</option>
+                    <option value="number">Número</option>
+                    <option value="date">Fecha</option>
+                    <option value="select">Lista desplegable</option>
+                    <option value="textarea">Texto largo</option>
+                    <option value="checkbox">Casilla (Sí/No)</option>
+                  </select>
+                </div>
+                <div class="form-group" id="new-custom-field-options-wrap" style="flex: 1.5; min-width: 180px; display: none;">
+                  <label for="new-custom-field-options" style="font-size: 0.78rem;">Opciones (separadas por coma)</label>
+                  <input type="text" id="new-custom-field-options" class="form-control" placeholder="Opción 1, Opción 2" />
+                </div>
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; padding-bottom: 0.45rem;">
+                  <input type="checkbox" id="new-custom-field-required" />
+                  <span>Obligatorio</span>
+                </label>
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i data-lucide="plus"></i>
+                  <span>Agregar Campo</span>
+                </button>
+              </form>
+
+              <div id="form-builder-fields-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
             </div>
 
             <!-- TARJETA: SEGURIDAD Y CAMBIO DE CONTRASEÑA -->
@@ -2041,6 +2146,7 @@
   <!-- Scripts de la Aplicación -->
   <script src="js/data.js"></script>
   <script src="js/customizer.js"></script>
+  <script src="js/form_customizer.js"></script>
   <script src="js/sedes.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/inventory.js"></script>

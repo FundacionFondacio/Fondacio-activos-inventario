@@ -10,12 +10,14 @@ from app.models import Donacion
 from app.schemas.donacion import DonacionSalida
 from app.services.exportacion import Columna, Fila, _hoja, _v
 
+TIPOS = {"donacion": "Donación", "compra": "Compra"}
 ESTADOS = {"recibida": "Recibida", "anulada": "Anulada"}
 CONDICIONES = {"nuevo": "Nuevo", "usado": "Usado", "danado": "Dañado"}
 
 DONACIONES: list[Columna] = [
     ("Fecha", lambda f: date.fromisoformat(f["donationDate"])),
-    ("Donante", _v("donorName")),
+    ("Tipo", lambda f: TIPOS.get(f.get("tipo", "donacion"), "Donación")),
+    ("Donante / Proveedor", _v("donorName")),
     ("Sede", _v("sede")),
     ("Estado", lambda f: ESTADOS.get(f["status"], f["status"])),
     ("Ítems", lambda f: len(f["items"])),

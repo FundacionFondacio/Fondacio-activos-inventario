@@ -598,6 +598,32 @@ class DataStoreAPI {
     }
     return DEFAULT_SETTINGS;
   }
+
+  async saveSettings(settings) {
+    const res = await api('/api/configuracion', {
+      method: 'PATCH',
+      body: { settings }
+    });
+    return (res && res.settings) ? { ...DEFAULT_SETTINGS, ...res.settings } : settings;
+  }
+
+  async getFormSchemas() {
+    try {
+      const res = await api('/api/configuracion');
+      if (res && res.formSchemas) return res.formSchemas;
+    } catch (e) {
+      console.warn('Usando esquemas de formulario por defecto:', e.message);
+    }
+    return {};
+  }
+
+  async saveFormSchemas(formSchemas) {
+    const res = await api('/api/configuracion', {
+      method: 'PATCH',
+      body: { formSchemas }
+    });
+    return (res && res.formSchemas) ? res.formSchemas : formSchemas;
+  }
 }
 
 // Instancia global DB que reemplaza el DataStore de LocalStorage

@@ -13,6 +13,7 @@ const NEW_CATEGORY_OPTION = '__nueva__';
 
 let donationsOffset = 0;
 let donationsTab = 'list';
+let currentIngresoTipo = 'donacion'; // 'donacion' | 'compra'
 let donationCatalogs = { donors: [], categories: [], sedes: [] };
 let currentDonation = null; // Donación abierta en el detalle
 let editingDonation = null; // Donación que se está editando (null al crear)
@@ -109,8 +110,10 @@ function fillSelect(select, options, placeholder) {
 
 function fillDonationFilterSelects() {
   const { donors, categories, sedes } = donationCatalogs;
+  const esCompra = currentIngresoTipo === 'compra';
   fillSelect(document.getElementById('donation-filter-donor'),
-    donors.map(d => ({ value: d.id, label: d.active ? d.name : `${d.name} (inactivo)` })), 'Todos los donantes');
+    donors.map(d => ({ value: d.id, label: d.active ? d.name : `${d.name} (inactivo)` })),
+    esCompra ? 'Todos los proveedores' : 'Todos los donantes');
   fillSelect(document.getElementById('donation-filter-sede'),
     sedes.map(s => ({ value: s.name, label: s.name })), 'Todas las sedes');
   fillSelect(document.getElementById('donation-filter-category'),
@@ -130,11 +133,26 @@ async function renderDonationsMonthSummary() {
 
 // --- VISTA Y PESTAÑAS ---
 
-async function renderDonacionesView() {
+async function renderDonacionesView(tipo = currentIngresoTipo) {
+  currentIngresoTipo = tipo === 'compra' ? 'compra' : 'donacion';
+  donationsOffset = 0;
+  const esCompra = currentIngresoTipo === 'compra';
+
+  const tabListBtn = document.querySelector('.donation-tab-btn[data-tab="list"]');
+  const tabDonorsBtn = document.querySelector('.donation-tab-btn[data-tab="donors"]');
+  if (tabListBtn) tabListBtn.textContent = esCompra ? 'Compras' : 'Donaciones';
+  if (tabDonorsBtn) tabDonorsBtn.textContent = esCompra ? 'Proveedores / Donantes' : 'Donantes';
+
+  const newBtnSpan = document.querySelector('#donations-tab-list [onclick="openNewDonationModal()"] span');
+  if (newBtnSpan) newBtnSpan.textContent = esCompra ? 'Nueva Compra' : 'Nueva Donación';
+
+  const donorTh = document.querySelector('#donations-table-wrap thead th:nth-child(2)');
+  if (donorTh) donorTh.textContent = esCompra ? 'Proveedor' : 'Donante';
+
   try {
     await loadDonationCatalogs();
   } catch (err) {
-    showToast('Error al cargar los catálogos de donaciones: ' + err.message, 'error');
+    showToast('Error al cargar los catálogos: ' + err.message, 'error');
   }
   renderDonationsMonthSummary();
   showDonationsTab(donationsTab);
@@ -162,6 +180,7 @@ function showDonationsTab(tab) {
 function getDonationFilters() {
   const val = id => document.getElementById(id)?.value || '';
   return {
+    tipo: currentIngresoTipo,
     desde: val('donation-filter-from'),
     hasta: val('donation-filter-to'),
     donante: val('donation-filter-donor'),
@@ -203,7 +222,8 @@ async function loadDonations() {
   }
 
   const { items, total } = page;
-  document.getElementById('donations-count-badge').textContent = `${total} donaciones`;
+  const esCompra = currentIngresoTipo === 'compra';
+  document.getElementById('donations-count-badge').textContent = `${total} ${esCompra ? 'compras' : 'donaciones'}`;
   document.getElementById('donations-table-wrap').style.display = items.length ? 'block' : 'none';
   document.getElementById('donations-empty-state').style.display = items.length ? 'none' : 'flex';
 
@@ -493,7 +513,8 @@ async function openNewDonationModal() {
   editingDonation = null;
   document.getElementById('form-donation').reset();
   showFormError('donation-form-error', '');
-  document.getElementById('modal-donation-title').textContent = 'Registrar Donación';
+  const esCompra = currentIngresoTipo === 'compra';
+  document.getElementById('modal-donation-title').textContent = esCompra ? 'Registrar Compra' : 'Registrar Donación';
   document.getElementById('donation-id').value = '';
   fillDonationFormSelects({ donorId: '' });
   const date = document.getElementById('donation-date');
@@ -503,6 +524,9 @@ async function openNewDonationModal() {
   addDonationItemRow();
   updateDonationFormTotal();
   openModal('modal-donation-form');
+  if (typeof populateCustomFieldsInModal === 'function') {
+    populateCustomFieldsInModal('modal-donation-form', {});
+  }
 }
 
 async function openEditDonationModal(id) {
@@ -515,14 +539,15 @@ async function openEditDonationModal(id) {
     return;
   }
   if (donation.status !== 'recibida') {
-    showToast('La donación está anulada y no se puede modificar.', 'warning');
+    showToast('El registro está anulado y no se puede modificar.', 'warning');
     return;
   }
   editingDonation = donation;
   closeModal('modal-donation-detail');
   document.getElementById('form-donation').reset();
   showFormError('donation-form-error', '');
-  document.getElementById('modal-donation-title').textContent = `Editar Donación de ${donation.donorName}`;
+  const esCompra = (donation.tipo || currentIngresoTipo) === 'compra';
+  document.getElementById('modal-donation-title').textContent = `${esCompra ? 'Editar Compra' : 'Editar Donación'} de ${donation.donorName}`;
   document.getElementById('donation-id').value = donation.id;
   fillDonationFormSelects({ donorId: donation.donorId, sede: donation.sede });
   const date = document.getElementById('donation-date');
@@ -533,6 +558,9 @@ async function openEditDonationModal(id) {
   donation.items.forEach(item => addDonationItemRow(item));
   updateDonationFormTotal();
   openModal('modal-donation-form');
+  if (typeof populateCustomFieldsInModal === 'function') {
+    populateCustomFieldsInModal('modal-donation-form', donation.customFields || {});
+  }
 }
 
 function categoryOptionsHtml(selectedId) {
@@ -664,8 +692,14 @@ async function handleSaveDonationForm(e) {
     sede: document.getElementById('donation-sede').value,
     donationDate: document.getElementById('donation-date').value,
     notes: document.getElementById('donation-notes').value.trim(),
-    items
+    items,
+    customFields: typeof collectCustomFieldsFromModal === 'function'
+      ? collectCustomFieldsFromModal('modal-donation-form')
+      : {}
   };
+  if (!editingDonation) {
+    payload.tipo = currentIngresoTipo;
+  }
 
   const button = document.getElementById('btn-save-donation');
   button.disabled = true;
@@ -674,7 +708,8 @@ async function handleSaveDonationForm(e) {
       ? await DB.updateDonation(editingDonation.id, payload)
       : await DB.createDonation(payload);
     closeModal('modal-donation-form');
-    showToast(editingDonation ? 'Donación actualizada.' : 'Donación registrada.', 'success');
+    const esCompra = (saved.tipo || currentIngresoTipo) === 'compra';
+    showToast(editingDonation ? `${esCompra ? 'Compra' : 'Donación'} actualizada.` : `${esCompra ? 'Compra' : 'Donación'} registrada.`, 'success');
     editingDonation = null;
     // Puede haber categorías nuevas: se recargan los catálogos antes de mostrar el resultado.
     await loadDonationCatalogs();

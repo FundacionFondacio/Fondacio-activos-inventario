@@ -9,7 +9,7 @@ from sqlalchemy import Select, func, or_, select
 from app.busqueda import patron_de_busqueda
 from app.errores import DatoInvalido
 from app.models import Categoria, Donacion, ItemDonacion, Sede
-from app.models.donacion import EstadoDonacion
+from app.models.donacion import EstadoDonacion, TipoIngreso
 
 Filtro = Annotated[str | None, Query(max_length=100)]
 
@@ -24,6 +24,7 @@ class FiltrosDeDonaciones:
         donante: Filtro = None,
         sede: Filtro = None,
         estado: EstadoDonacion | None = None,
+        tipo: TipoIngreso | None = None,
         categoria: Filtro = None,
         q: Filtro = None,
     ) -> None:
@@ -34,11 +35,14 @@ class FiltrosDeDonaciones:
         self.donante = donante.strip() if donante else None
         self.sede = sede.strip() if sede else None
         self.estado = estado
+        self.tipo = tipo
         self.categoria = categoria.strip() if categoria else None
         self.q = q.strip() if q else ""
 
     def consulta(self) -> Select:
         consulta = select(Donacion)
+        if self.tipo:
+            consulta = consulta.where(Donacion.tipo == self.tipo)
         if self.desde:
             consulta = consulta.where(Donacion.fecha >= self.desde)
         if self.hasta:

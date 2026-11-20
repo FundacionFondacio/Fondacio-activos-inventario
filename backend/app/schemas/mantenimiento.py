@@ -1,7 +1,7 @@
 """Esquemas de mantenimientos."""
 
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
@@ -20,6 +20,7 @@ COLUMNAS = {
     "replaced_parts": "repuestos",
     "next_scheduled_maintenance": "proximo",
     "notes": "notas",
+    "custom_fields": "campos_extra",
 }
 
 Costo = Annotated[float, Field(ge=0)]
@@ -41,6 +42,7 @@ class MantenimientoNuevo(Entrada):
     replaced_parts: TextoLargo = ""
     next_scheduled_maintenance: FechaOpcional = None
     notes: TextoLargo = ""
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class MantenimientoCambios(Entrada):
@@ -55,6 +57,7 @@ class MantenimientoCambios(Entrada):
     replaced_parts: TextoLargo = ""
     next_scheduled_maintenance: FechaOpcional = None
     notes: TextoLargo = ""
+    custom_fields: dict[str, Any] | None = None
 
 
 class Cierre(Entrada):
@@ -78,5 +81,6 @@ class MantenimientoSalida(Salida):
     replaced_parts: str = Field(validation_alias="repuestos")
     next_scheduled_maintenance: date | None = Field(validation_alias="proximo")
     notes: str = Field(validation_alias="notas")
+    custom_fields: dict[str, Any] = Field(validation_alias="campos_extra")
     created_at: datetime = Field(validation_alias="creado_en")
     updated_at: datetime = Field(validation_alias="actualizado_en")

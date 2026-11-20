@@ -1,11 +1,11 @@
 """Esquemas de donaciones."""
 
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import Field, model_validator
 
-from app.models.donacion import EstadoDonacion, EstadoItem
+from app.models.donacion import EstadoDonacion, EstadoItem, TipoIngreso
 from app.schemas.base import Entrada, Salida
 from app.schemas.comunes import FechaOpcional, NoNulo, Texto, TextoLargo, TextoObligatorio
 from app.schemas.equipo import EquipoNuevo
@@ -44,11 +44,13 @@ class EquipoDeItem(EquipoNuevo):
 
 
 class DonacionNueva(Entrada):
+    tipo: TipoIngreso = TipoIngreso.DONACION
     donor_id: TextoObligatorio
     sede: TextoObligatorio
     donation_date: FechaOpcional = None
     notes: TextoLargo = ""
     items: Annotated[list[ItemNuevo], Field(min_length=1, max_length=200)]
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class DonacionCambios(Entrada):
@@ -59,6 +61,7 @@ class DonacionCambios(Entrada):
     # Si viene, reemplaza la lista completa de ítems. Los ítems convertidos en equipo deben seguir
     # en la lista, con su id y sin cambios.
     items: Annotated[list[ItemCambio] | None, Field(min_length=1, max_length=200), NoNulo] = None
+    custom_fields: dict[str, Any] | None = None
 
 
 class ItemSalida(Salida):
@@ -75,6 +78,7 @@ class ItemSalida(Salida):
 
 class DonacionSalida(Salida):
     id: str
+    tipo: TipoIngreso = Field(validation_alias="tipo")
     donor_id: str = Field(validation_alias="donante_id")
     donor_name: str = Field(validation_alias="donante_nombre")
     sede: str = Field(validation_alias="sede_nombre")
@@ -84,5 +88,6 @@ class DonacionSalida(Salida):
     receipt: str = Field(validation_alias="comprobante")
     items: list[ItemSalida]
     total_estimated: int = Field(validation_alias="total_estimado")
+    custom_fields: dict[str, Any] = Field(validation_alias="campos_extra")
     created_at: datetime = Field(validation_alias="creado_en")
     updated_at: datetime = Field(validation_alias="actualizado_en")

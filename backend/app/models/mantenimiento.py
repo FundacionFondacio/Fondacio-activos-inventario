@@ -2,8 +2,10 @@
 
 from datetime import date
 from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import CheckConstraint, Date, ForeignKey, Numeric, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -49,3 +51,6 @@ class Mantenimiento(Trazable, Base):
     repuestos: Mapped[str] = mapped_column(Text, server_default="")
     proximo: Mapped[date | None] = mapped_column(Date)
     notas: Mapped[str] = mapped_column(Text, server_default="")
+    campos_extra: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}"
+    )

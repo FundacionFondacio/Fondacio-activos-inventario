@@ -67,52 +67,35 @@ async function initCustomizerModule() {
     applyCustomColorsToDOM(DEFAULT_THEME_CONFIG);
   }
 
-  // Inicializar inputs del modal de personalización
-  const primaryInput = document.getElementById('custom-primary-color');
-  const darkInput = document.getElementById('custom-dark-color');
-  const sidebarInput = document.getElementById('custom-sidebar-color');
-  const appBgInput = document.getElementById('custom-appbg-color');
-  const accentInput = document.getElementById('custom-accent-color');
+  // Inicializar inputs del modal de personalización y de Ajustes en página
+  const colorVarPairs = [
+    ['custom-primary-color', '--primary-500'],
+    ['inline-primary-color', '--primary-500'],
+    ['custom-dark-color', '--primary-600'],
+    ['inline-dark-color', '--primary-600'],
+    ['custom-sidebar-color', '--bg-sidebar'],
+    ['inline-sidebar-color', '--bg-sidebar'],
+    ['custom-appbg-color', '--bg-app'],
+    ['inline-appbg-color', '--bg-app'],
+    ['custom-accent-color', '--accent-amber'],
+    ['inline-accent-color', '--accent-amber'],
+  ];
 
-  if (primaryInput) {
-    primaryInput.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--primary-500', e.target.value);
-    });
-  }
+  colorVarPairs.forEach(([inputId, cssVar]) => {
+    const el = document.getElementById(inputId);
+    if (el) {
+      el.addEventListener('input', (e) => {
+        document.documentElement.style.setProperty(cssVar, e.target.value);
+      });
+    }
+  });
 
-  if (darkInput) {
-    darkInput.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--primary-600', e.target.value);
-    });
-  }
-
-  if (sidebarInput) {
-    sidebarInput.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--bg-sidebar', e.target.value);
-    });
-  }
-
-  if (appBgInput) {
-    appBgInput.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--bg-app', e.target.value);
-    });
-  }
-
-  if (accentInput) {
-    accentInput.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--accent-amber', e.target.value);
-    });
-  }
-
-  // Renderizar chips de presets en el modal
+  // Renderizar chips de presets en el modal y en Ajustes
   renderPresetSwatches();
 }
 
 function renderPresetSwatches() {
-  const container = document.getElementById('preset-swatches-container');
-  if (!container) return;
-
-  container.innerHTML = Object.keys(COLOR_PRESETS).map(key => {
+  const html = Object.keys(COLOR_PRESETS).map(key => {
     const p = COLOR_PRESETS[key];
     return `
       <div class="preset-card" onclick="selectColorPreset('${key}')" style="cursor: pointer; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.65rem; background: var(--bg-surface); transition: all 0.2s;">
@@ -126,6 +109,11 @@ function renderPresetSwatches() {
       </div>
     `;
   }).join('');
+
+  ['preset-swatches-container', 'inline-preset-swatches-container'].forEach(id => {
+    const container = document.getElementById(id);
+    if (container) container.innerHTML = html;
+  });
 }
 
 function selectColorPreset(presetKey) {
@@ -143,17 +131,45 @@ function selectColorPreset(presetKey) {
 
 function syncColorInputsWithConfig(config) {
   if (!config) return;
-  const p = document.getElementById('custom-primary-color');
-  const d = document.getElementById('custom-dark-color');
-  const s = document.getElementById('custom-sidebar-color');
-  const a = document.getElementById('custom-appbg-color');
-  const ac = document.getElementById('custom-accent-color');
+  const mappings = [
+    ['custom-primary-color', 'primaryColor'],
+    ['inline-primary-color', 'primaryColor'],
+    ['custom-dark-color', 'primaryDark'],
+    ['inline-dark-color', 'primaryDark'],
+    ['custom-sidebar-color', 'sidebarBg'],
+    ['inline-sidebar-color', 'sidebarBg'],
+    ['custom-appbg-color', 'appBg'],
+    ['inline-appbg-color', 'appBg'],
+    ['custom-accent-color', 'accentColor'],
+    ['inline-accent-color', 'accentColor'],
+  ];
+  mappings.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el && config[key]) el.value = config[key];
+  });
+}
 
-  if (p && config.primaryColor) p.value = config.primaryColor;
-  if (d && config.primaryDark) d.value = config.primaryDark;
-  if (s && config.sidebarBg) s.value = config.sidebarBg;
-  if (a && config.appBg) a.value = config.appBg;
-  if (ac && config.accentColor) ac.value = config.accentColor;
+async function saveThemeConfigFromSettings() {
+  const config = {
+    primaryColor: document.getElementById('inline-primary-color')?.value || '#2e7d32',
+    primaryDark: document.getElementById('inline-dark-color')?.value || '#1b5e20',
+    sidebarBg: document.getElementById('inline-sidebar-color')?.value || '#0f2d18',
+    appBg: document.getElementById('inline-appbg-color')?.value || '#f4f7f6',
+    accentColor: document.getElementById('inline-accent-color')?.value || '#f59e0b'
+  };
+  try {
+    await DB.saveThemeConfig(config);
+    applyCustomColorsToDOM(config);
+    syncColorInputsWithConfig(config);
+    showToast('Tema y colores guardados globalmente.', 'success');
+    if (typeof renderDashboard === 'function') renderDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function resetThemeToDefaults() {
+  return resetDefaultColors();
 }
 
 function applyCustomColorsToDOM(config) {

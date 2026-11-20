@@ -1,6 +1,6 @@
 """Esquemas de la configuración global."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import Field, StringConstraints
 
@@ -14,8 +14,10 @@ Grupo = Annotated[dict[Clave, Valor], Field(max_length=40)]
 class ConfiguracionCambios(Entrada):
     theme_config: Grupo | None = None
     settings: Grupo | None = None
+    form_schemas: dict[str, Any] | None = None
 
 
 class ConfiguracionSalida(Salida):
     theme_config: dict[str, str]
     settings: dict[str, str]
+    form_schemas: dict[str, Any] = Field(default_factory=dict)

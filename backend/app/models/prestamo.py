@@ -2,8 +2,10 @@
 
 from datetime import date
 from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import CheckConstraint, Date, ForeignKey, Index, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -49,6 +51,9 @@ class Prestamo(Trazable, Base):
     estado: Mapped[str] = mapped_column(Text)
     condicion_entrega: Mapped[str] = mapped_column(Text, server_default="")
     notas_devolucion: Mapped[str] = mapped_column(Text, server_default="")
+    campos_extra: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}"
+    )
 
     sede: Mapped[Sede | None] = relationship(lazy="selectin")
 

@@ -27,7 +27,7 @@ from app.services.auditoria import registrar
 from app.services.comun import aplicar_cambios, marcar_autor, resolver_sede
 from app.tiempo import hoy
 
-COLUMNAS = {"notes": "notas"}
+COLUMNAS = {"notes": "notas", "custom_fields": "campos_extra"}
 
 
 def _buscar_donante(bd: Session, donante_id: str) -> Donante:
@@ -145,12 +145,14 @@ def crear_donacion(bd: Session, datos: DonacionNueva, autor: Usuario) -> Donacio
     _exigir_fecha_valida(fecha)
 
     donacion = Donacion(
+        tipo=datos.tipo,
         donante=donante,
         sede=sede,
         fecha=fecha,
         notas=datos.notes,
         estado=EstadoDonacion.RECIBIDA,
         items=_construir_items(bd, datos.items, autor),
+        campos_extra=datos.custom_fields,
     )
     marcar_autor(donacion, autor, nuevo=True)
     bd.add(donacion)

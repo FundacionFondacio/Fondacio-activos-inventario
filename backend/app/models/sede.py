@@ -1,6 +1,9 @@
 """Sedes de la fundación."""
 
+from typing import Any
+
 from sqlalchemy import Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -20,3 +23,6 @@ class Sede(Trazable, Base):
     correo: Mapped[str] = mapped_column(Text, server_default="")
     color: Mapped[str] = mapped_column(Text, server_default="")
     enfoque: Mapped[str] = mapped_column(Text, server_default="")
+    campos_extra: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}"
+    )

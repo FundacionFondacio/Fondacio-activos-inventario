@@ -1,7 +1,7 @@
 """Esquemas de préstamos."""
 
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
@@ -20,6 +20,7 @@ COLUMNAS = {
     "loan_date": "fecha_prestamo",
     "expected_return_date": "fecha_devolucion_prevista",
     "condition_on_loan": "condicion_entrega",
+    "custom_fields": "campos_extra",
 }
 
 EstadoAlDevolver = Literal["operativo", "bodega", "baja"]
@@ -40,6 +41,7 @@ class PrestamoNuevo(Entrada):
     loan_date: FechaOpcional = None
     expected_return_date: FechaOpcional = None
     condition_on_loan: TextoLargo = ""
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class PrestamoCambios(Entrada):
@@ -55,6 +57,7 @@ class PrestamoCambios(Entrada):
     expected_return_date: FechaOpcional = None
     condition_on_loan: TextoLargo = ""
     return_notes: TextoLargo = ""
+    custom_fields: dict[str, Any] | None = None
 
 
 class Devolucion(Entrada):
@@ -81,5 +84,6 @@ class PrestamoSalida(Salida):
     overdue: bool = Field(validation_alias="vencido")
     condition_on_loan: str = Field(validation_alias="condicion_entrega")
     return_notes: str = Field(validation_alias="notas_devolucion")
+    custom_fields: dict[str, Any] = Field(validation_alias="campos_extra")
     created_at: datetime = Field(validation_alias="creado_en")
     updated_at: datetime = Field(validation_alias="actualizado_en")

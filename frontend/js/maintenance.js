@@ -156,6 +156,9 @@ async function openNewMaintenanceModal() {
     document.getElementById('maint-asset-info-preview').innerHTML = '';
 
     openModal('modal-maintenance-form');
+    if (typeof populateCustomFieldsInModal === 'function') {
+      populateCustomFieldsInModal('modal-maintenance-form', {});
+    }
   } catch (err) {
     showToast('Error al cargar equipos: ' + err.message, 'error');
   }
@@ -181,7 +184,8 @@ async function handleSaveMaintenanceForm(e) {
     description: document.getElementById('maint-description').value.trim(),
     replacedParts: document.getElementById('maint-parts').value.trim(),
     nextScheduledMaintenance: document.getElementById('maint-next-date').value || null,
-    notes: document.getElementById('maint-notes').value.trim()
+    notes: document.getElementById('maint-notes').value.trim(),
+    customFields: typeof collectCustomFieldsFromModal === 'function' ? collectCustomFieldsFromModal('modal-maintenance-form') : {}
   };
 
   try {

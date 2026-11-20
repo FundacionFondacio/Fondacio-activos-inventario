@@ -225,6 +225,9 @@ function initApp() {
 
   // Inicializar Personalizador
   initCustomizerModule();
+  if (typeof initFormCustomizerModule === 'function') {
+    initFormCustomizerModule();
+  }
 
   // Inicializar Navegación
   initNavigation();
@@ -322,7 +325,8 @@ function navigateTo(viewId) {
     sec.classList.remove('active');
   });
 
-  const targetSection = document.getElementById(`view-${viewId}`);
+  const targetSectionId = viewId === 'compras' ? 'view-donaciones' : `view-${viewId}`;
+  const targetSection = document.getElementById(targetSectionId);
   if (targetSection) {
     targetSection.classList.add('active');
   }
@@ -336,7 +340,8 @@ function navigateTo(viewId) {
     mantenimiento: { title: 'Mantenimientos y Soporte Técnico', sub: 'Bitácora técnica, servicios preventivos y correctivos' },
     diagnostico: { title: 'Diagnóstico de Software, Licencias y Tablets', sub: 'Auditoría de sistemas operativos, activación, parches y mitigación de obsolescencia' },
     donaciones: { title: 'Donaciones Recibidas', sub: 'Actas de donación con sus ítems, donantes, categorías, comprobantes y conversión a equipos' },
-    respaldo: { title: 'Base de Datos y Configuración', sub: 'Sincronización con el servidor central, exportación oficial y datos de la fundación' }
+    compras: { title: 'Compras Realizadas', sub: 'Registro de compras, proveedores, facturas/comprobantes y conversión a equipos' },
+    respaldo: { title: 'Base de Datos y Configuración', sub: 'Sincronización con el servidor central, personalización y editor de formularios' }
   };
 
   const meta = titleMap[viewId] || titleMap.dashboard;
@@ -359,7 +364,9 @@ function navigateTo(viewId) {
   } else if (viewId === 'diagnostico') {
     renderDiagnosticoView();
   } else if (viewId === 'donaciones') {
-    renderDonacionesView();
+    renderDonacionesView('donacion');
+  } else if (viewId === 'compras') {
+    renderDonacionesView('compra');
   } else if (viewId === 'respaldo') {
     renderSettingsView();
   }
@@ -371,6 +378,9 @@ function navigateTo(viewId) {
 
 // --- GESTIÓN DE MODALES ---
 function openModal(modalId) {
+  if (typeof applyFormSchemaToModal === 'function') {
+    applyFormSchemaToModal(modalId);
+  }
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.add('open');
@@ -460,6 +470,24 @@ function initBackupModule() {
   if (formNewUser) {
     formNewUser.addEventListener('submit', handleSaveNewUserForm);
   }
+
+  const formInstitutional = document.getElementById('form-institutional-settings');
+  if (formInstitutional) {
+    formInstitutional.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await DB.saveSettings({
+          orgName: document.getElementById('setting-org-name')?.value.trim() || '',
+          nit: document.getElementById('setting-nit')?.value.trim() || '',
+          email: document.getElementById('setting-email')?.value.trim() || '',
+          website: document.getElementById('setting-website')?.value.trim() || '',
+        });
+        showToast('Información institucional actualizada.', 'success');
+      } catch (err) {
+        showToast('Error al guardar información: ' + err.message, 'error');
+      }
+    });
+  }
 }
 
 async function renderSettingsView() {
@@ -482,15 +510,23 @@ async function renderSettingsView() {
     }
 
     const settings = await DB.getSettings();
-    const orgNameEl = document.getElementById('settings-org-name');
-    const nitEl = document.getElementById('settings-nit');
-    const emailEl = document.getElementById('settings-email');
-    const webEl = document.getElementById('settings-website');
+    const orgNameEl = document.getElementById('setting-org-name');
+    const nitEl = document.getElementById('setting-nit');
+    const emailEl = document.getElementById('setting-email');
+    const webEl = document.getElementById('setting-website');
 
-    if (orgNameEl) orgNameEl.textContent = settings.orgName || 'Fundación Fondacio Colombia';
-    if (nitEl) nitEl.textContent = settings.nit || '900.384.129-5';
-    if (emailEl) emailEl.textContent = settings.email || 'contacto@fondacio-co.org';
-    if (webEl) webEl.textContent = settings.website || 'fondaciocolombia.org';
+    if (orgNameEl) orgNameEl.value = settings.orgName || 'Fundación Fondacio Colombia';
+    if (nitEl) nitEl.value = settings.nit || '900.384.129-5';
+    if (emailEl) emailEl.value = settings.email || 'contacto@fondacio-co.org';
+    if (webEl) webEl.value = settings.website || 'https://www.fondaciocolombia.org';
+
+    const themeConfig = await DB.getThemeConfig();
+    if (typeof syncColorInputsWithConfig === 'function') {
+      syncColorInputsWithConfig(themeConfig);
+    }
+    if (typeof renderFormBuilderList === 'function') {
+      renderFormBuilderList();
+    }
   } catch (e) {
     console.warn('Error al cargar ajustes institucionales:', e);
   }

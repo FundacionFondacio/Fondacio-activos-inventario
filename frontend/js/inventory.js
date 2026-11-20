@@ -370,6 +370,9 @@ async function openNewAssetModal() {
   if (assignDate) assignDate.value = today;
   
   openModal('modal-asset-form');
+  if (typeof populateCustomFieldsInModal === 'function') {
+    populateCustomFieldsInModal('modal-asset-form', {});
+  }
 }
 
 async function openEditAssetModal(id) {
@@ -482,6 +485,9 @@ async function openEditAssetModal(id) {
     document.getElementById('asset-recommendations').value = a.recommendations || '';
 
     openModal('modal-asset-form');
+    if (typeof populateCustomFieldsInModal === 'function') {
+      populateCustomFieldsInModal('modal-asset-form', a);
+    }
   } catch (err) {
     showToast('Error al cargar detalle del equipo: ' + err.message, 'error');
   }
@@ -595,7 +601,8 @@ async function handleSaveAssetForm(e) {
     status: document.getElementById('asset-status').value || 'operativo',
     condition: document.getElementById('asset-condition').value || 'Bueno',
     recommendations: document.getElementById('asset-recommendations').value.trim() || '',
-    estimatedValue: document.getElementById('asset-value').value ? Number(document.getElementById('asset-value').value) : null
+    estimatedValue: document.getElementById('asset-value').value ? Number(document.getElementById('asset-value').value) : null,
+    ...(typeof collectCustomFieldsFromModal === 'function' ? collectCustomFieldsFromModal('modal-asset-form') : {})
   };
 
   const fileInput = document.getElementById('asset-image-file');

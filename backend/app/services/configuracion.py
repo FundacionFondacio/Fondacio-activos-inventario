@@ -6,10 +6,10 @@ from app.models import Configuracion, Usuario
 from app.schemas.configuracion import ConfiguracionCambios
 from app.services.auditoria import registrar
 
-CLAVES = {"theme_config": "themeConfig", "settings": "settings"}
+CLAVES = {"theme_config": "themeConfig", "settings": "settings", "form_schemas": "formSchemas"}
 
 
-def leer_configuracion(bd: Session) -> dict[str, dict[str, str]]:
+def leer_configuracion(bd: Session) -> dict[str, dict]:
     return {
         campo: (fila.valor if (fila := bd.get(Configuracion, clave)) else {})
         for campo, clave in CLAVES.items()
@@ -18,7 +18,7 @@ def leer_configuracion(bd: Session) -> dict[str, dict[str, str]]:
 
 def cambiar_configuracion(
     bd: Session, datos: ConfiguracionCambios, autor: Usuario
-) -> dict[str, dict[str, str]]:
+) -> dict[str, dict]:
     """Mezcla los valores nuevos con los guardados: lo que no viene se conserva."""
     for campo, clave in CLAVES.items():
         nuevos = getattr(datos, campo)

@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -15,6 +16,7 @@ from sqlalchemy import (
     Text,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -29,6 +31,11 @@ class EstadoDonacion(StrEnum):
     ANULADA = "anulada"
 
 
+class TipoIngreso(StrEnum):
+    DONACION = "donacion"
+    COMPRA = "compra"
+
+
 class EstadoItem(StrEnum):
     NUEVO = "nuevo"
     USADO = "usado"
@@ -39,10 +46,13 @@ class Donacion(Trazable, Base):
     __tablename__ = "donaciones"
     __table_args__ = (
         CheckConstraint("estado IN ('recibida', 'anulada')", name="estado_valido"),
+        CheckConstraint("tipo IN ('donacion', 'compra')", name="tipo_valido"),
         Index("ix_donaciones_fecha", "fecha"),
+        Index("ix_donaciones_tipo", "tipo"),
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=nuevo_id)
+    tipo: Mapped[str] = mapped_column(Text, default=TipoIngreso.DONACION, server_default="donacion")
     donante_id: Mapped[str] = mapped_column(ForeignKey("donantes.id"), index=True)
     sede_id: Mapped[str] = mapped_column(ForeignKey("sedes.id"), index=True)
     fecha: Mapped[date] = mapped_column(Date)
@@ -50,6 +60,9 @@ class Donacion(Trazable, Base):
     estado: Mapped[str] = mapped_column(Text, default=EstadoDonacion.RECIBIDA)
     # Dirección del comprobante subido, con su huella; vacía si no tiene.
     comprobante: Mapped[str] = mapped_column(Text, server_default="")
+    campos_extra: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}"
+    )
 
     donante: Mapped[Donante] = relationship(lazy="selectin")
     sede: Mapped[Sede] = relationship(lazy="selectin")

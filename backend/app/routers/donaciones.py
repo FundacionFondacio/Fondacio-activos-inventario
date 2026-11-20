@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import BD
 from app.errores import NoEncontrado
 from app.models import Donacion, DonacionComprobante, Equipo, Usuario
+from app.models.donacion import TipoIngreso
 from app.paginacion import Pag, paginar
 from app.schemas.base import Pagina
 from app.schemas.donacion import DonacionCambios, DonacionNueva, DonacionSalida, EquipoDeItem
@@ -52,7 +53,8 @@ def listar(bd: BD, _: UsuarioActual, pag: Pag, filtros: Filtros) -> dict:
 )
 def exportar(bd: BD, _: UsuarioActual, filtros: Filtros) -> Response:
     donaciones = bd.scalars(filtros.consulta().order_by(*ORDEN)).all()
-    nombre = f"Donaciones_Fondacio_{hoy().isoformat()}.xlsx"
+    prefijo = "Compras" if filtros.tipo == TipoIngreso.COMPRA else "Donaciones"
+    nombre = f"{prefijo}_Fondacio_{hoy().isoformat()}.xlsx"
     return Response(
         generar_excel_donaciones(donaciones),
         media_type=XLSX,

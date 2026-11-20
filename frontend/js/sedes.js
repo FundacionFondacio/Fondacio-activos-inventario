@@ -202,6 +202,9 @@ function openNewSedeModal() {
   document.getElementById('sede-color').value = '#2e7d32';
 
   openModal('modal-sede-form');
+  if (typeof populateCustomFieldsInModal === 'function') {
+    populateCustomFieldsInModal('modal-sede-form', {});
+  }
 }
 
 async function openEditSedeModal(id) {
@@ -224,6 +227,9 @@ async function openEditSedeModal(id) {
     document.getElementById('sede-focus').value = sede.focus || '';
 
     openModal('modal-sede-form');
+    if (typeof populateCustomFieldsInModal === 'function') {
+      populateCustomFieldsInModal('modal-sede-form', sede.customFields || {});
+    }
   } catch (err) {
     showToast('Error al cargar datos de la sede: ' + err.message, 'error');
   }
@@ -243,7 +249,8 @@ async function handleSaveSedeForm(e) {
     phone: document.getElementById('sede-phone').value.trim(),
     email: document.getElementById('sede-email').value.trim(),
     color: document.getElementById('sede-color').value,
-    focus: document.getElementById('sede-focus').value.trim()
+    focus: document.getElementById('sede-focus').value.trim(),
+    customFields: typeof collectCustomFieldsFromModal === 'function' ? collectCustomFieldsFromModal('modal-sede-form') : {}
   };
 
   if (!sedeData.name) {

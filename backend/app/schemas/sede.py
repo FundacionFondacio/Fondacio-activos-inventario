@@ -1,7 +1,7 @@
 """Esquemas de sedes."""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import Field
 
@@ -19,6 +19,7 @@ COLUMNAS = {
     "email": "correo",
     "color": "color",
     "focus": "enfoque",
+    "custom_fields": "campos_extra",
 }
 
 
@@ -32,6 +33,7 @@ class SedeNueva(Entrada):
     email: Texto = ""
     color: Texto = ""
     focus: TextoLargo = ""
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class SedeCambios(Entrada):
@@ -44,6 +46,7 @@ class SedeCambios(Entrada):
     email: Texto = ""
     color: Texto = ""
     focus: TextoLargo = ""
+    custom_fields: dict[str, Any] | None = None
 
 
 class SedeSalida(Salida):
@@ -57,5 +60,6 @@ class SedeSalida(Salida):
     email: str = Field(validation_alias="correo")
     color: str
     focus: str = Field(validation_alias="enfoque")
+    custom_fields: dict[str, Any] = Field(validation_alias="campos_extra")
     created_at: datetime = Field(validation_alias="creado_en")
     updated_at: datetime = Field(validation_alias="actualizado_en")
